@@ -26,7 +26,6 @@ func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	logrus.SetOutput(io.MultiWriter(writer, os.Stdout))
 	defer writer.Close()
-
 	if err := initConfig(); err != nil {
 		logrus.Fatalf("Config initialization error: %s", err.Error())
 	}
