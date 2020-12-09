@@ -1,3 +1,6 @@
 app:
-  port: 8088
-  logfile: /opt/server/logs/log
+  port: 8800
+  log:
+    filenamePattern: "./logs/log"
+    maxAgeInHours: 72
+    rotationInHours: 24

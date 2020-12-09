@@ -2,7 +2,7 @@ package main
 
 import (
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	logrus "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"
 	"net"
@@ -12,29 +12,31 @@ import (
 )
 
 func main() {
-	const (
-		port    = ":8088"
-		logPath = "logs"
-	)
-	writer, _ := rotatelogs.New(
-		logPath+".%Y-%m-%d",
-		//logPath+".%H%M%S",
-		rotatelogs.WithLinkName(logPath),
-		rotatelogs.WithMaxAge(time.Duration(72)*time.Hour),
-		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour),
-	)
-	logrus.SetFormatter(new(logrus.JSONFormatter))
-	logrus.SetOutput(io.MultiWriter(writer, os.Stdout))
-	defer writer.Close()
 	if err := initConfig(); err != nil {
 		logrus.Fatalf("Config initialization error: %s", err.Error())
 	}
 
+	logFilePattern := viper.GetString("app.log.filenamePattern")
+	if logFilePattern == "" {
+		panic("empty app.log.filenamePattern in config")
+	}
+	writer, _ := rotatelogs.New(
+		logFilePattern+".%Y-%m-%d",
+		//logPath+".%H%M%S",
+		rotatelogs.WithLinkName(logFilePattern),
+		rotatelogs.WithMaxAge(time.Duration(viper.GetInt32("app.log.maxAgeInHours"))*time.Hour),
+		rotatelogs.WithRotationTime(time.Duration(viper.GetInt32("app.log.rotationInHours"))*time.Hour),
+	)
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+	logrus.SetOutput(io.MultiWriter(writer, os.Stdout))
+	defer writer.Close()
+
+	port := ":" + viper.GetString("app.port")
 	listener, err := net.Listen("tcp", port)
-	logrus.Infof("starting server on port %s", port)
 	if err != nil {
 		panic(err)
 	}
+	logrus.Infof("starting server on port %s", port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
