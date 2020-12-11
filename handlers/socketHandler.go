@@ -3,7 +3,6 @@ package handlers
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -22,10 +21,11 @@ func AddConn(con net.Conn) {
 func HandleConnection(conn net.Conn) {
 	name := conn.RemoteAddr().String()
 	logrus.Infof("%+v connected", name)
-	conn.Write([]byte("Hello \n" +
-		"exit - disconnect\n" +
-		"status - get all connected clients\n" +
-		"asm_upd - update asm cache notification)\n"))
+	conn.Write([]byte("Hello \n\r" +
+		"exit - disconnect\n\r" +
+		"status - get all connected clients\n\r" +
+		"asm_upd - update asm cache notification)\n\r" +
+		"start_network_join - starting job to join networks log\n\r"))
 	defer conn.Close()
 	scanner := bufio.NewScanner(conn)
 Loop:
@@ -33,7 +33,7 @@ Loop:
 		switch text := scanner.Text(); text {
 		case "exit":
 			conn.Write([]byte("Bye\r"))
-			logrus.Info(fmt.Println(name, "disconnected"))
+			logrus.Infof("%s disconnected", name)
 			break Loop
 		case "status":
 			logrus.Infof("%s request status", name)
